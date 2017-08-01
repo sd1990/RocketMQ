@@ -191,6 +191,7 @@ public class ProcessQueue {
         long result = -1;
         final long now = System.currentTimeMillis();
         try {
+            //获取写锁
             this.lockTreeMap.writeLock().lockInterruptibly();
             this.lastConsumeTimestamp = now;
             try {
@@ -198,6 +199,7 @@ public class ProcessQueue {
                     result = this.queueOffsetMax + 1;
                     int removedCnt = 0;
                     for (MessageExt msg : msgs) {
+                        //移除已经消费过的消息，并统计
                         MessageExt prev = msgTreeMap.remove(msg.getQueueOffset());
                         if (prev != null) {
                             removedCnt--;
@@ -206,6 +208,7 @@ public class ProcessQueue {
                     msgCount.addAndGet(removedCnt);
 
                     if (!msgTreeMap.isEmpty()) {
+                        //如果存放消息的treeMap不为空，返回最小的值作为offset
                         result = msgTreeMap.firstKey();
                     }
                 }
